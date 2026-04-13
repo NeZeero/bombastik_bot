@@ -144,6 +144,24 @@ def date_picker_keyboard(dates: list[str], per_row: int = 3) -> InlineKeyboardMa
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
+def time_picker_keyboard(slots: list[tuple[str, bool]], per_row: int = 3) -> InlineKeyboardMarkup:
+    rows: list[list[InlineKeyboardButton]] = []
+    row: list[InlineKeyboardButton] = []
+    for time_value, is_booked in slots:
+        if is_booked:
+            button = InlineKeyboardButton(text=f"❌ {time_value}", callback_data=f"busy:{time_value}")
+        else:
+            button = InlineKeyboardButton(text=f"🟢 {time_value}", callback_data=f"time:{time_value}")
+        row.append(button)
+        if len(row) >= per_row:
+            rows.append(row)
+            row = []
+    if row:
+        rows.append(row)
+    rows.append([InlineKeyboardButton(text="◀️ Назад к датам", callback_data="back_to_dates")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
 @router.message(CommandStart())
 async def cmd_start(message: Message, state: FSMContext):
     await state.clear()
@@ -214,37 +232,12 @@ async def choose_time(call: CallbackQuery, state: FSMContext):
         await _safe_edit_text(call, "На эту дату больше нет свободных окон.")
         return
 
-    buttons: list[list[InlineKeyboardButton]] = []
-    for time_value, is_booked in slots:
-        if is_booked:
-            buttons.append(
-                [
-                    InlineKeyboardButton(
-                        text=f"❌ {time_value}",
-                        callback_data=f"busy:{time_value}",
-                    )
-                ]
-            )
-        else:
-            buttons.append(
-                [
-                    InlineKeyboardButton(
-                        text=f"🟢 {time_value}",
-                        callback_data=f"time:{time_value}",
-                    )
-                ]
-            )
-
-    buttons.append(
-        [InlineKeyboardButton(text="◀️ Назад к датам", callback_data="back_to_dates")]
-    )
-
     date_label = datetime.strptime(date, "%Y-%m-%d").strftime("%d.%m.%Y")
     await _safe_edit_text(
         call,
         f"🕐 Выберите время на <b>{date_label}</b>:\n\n"
         "🟢 — свободно   ❌ — занято",
-        reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons),
+        reply_markup=time_picker_keyboard(slots),
         parse_mode="HTML",
     )
     await state.set_state(BookingFSM.choosing_time)

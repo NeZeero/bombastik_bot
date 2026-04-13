@@ -11,7 +11,7 @@ pip install aiogram==3.7.0 apscheduler==3.10.4
 
 Откройте `config.py` и заполните:
 - `BOT_TOKEN` — токен от @BotFather
-- `MASTER_ID` — ваш Telegram ID (узнать у @userinfobot)
+- `MASTER_IDS` — ваш Telegram ID или несколько ID мастеров
 - `PORTFOLIO_TEXT` и `ADDRESS_TEXT` — свои тексты
 
 ### 3. Запуск
@@ -31,7 +31,7 @@ beauty_bot/
 ├── reminders.py     # Напоминания клиентам
 ├── requirements.txt
 └── handlers/
-    ├── client.py    # Логика записи клиента
+    ├── client_v2.py # Активная логика записи клиента
     └── master.py    # Панель управления мастера
 ```
 
