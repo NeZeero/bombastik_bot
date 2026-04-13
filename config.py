@@ -1,16 +1,14 @@
 from __future__ import annotations
 
 import os
-from dotenv import load_dotenv
 
 # ==========================================
 # НАСТРОЙКИ БОТА
 # ==========================================
 
-load_dotenv()
-
-BOT_TOKEN = os.getenv("BOT_TOKEN") or os.getenv("TOKEN") or ""
-TOKEN = BOT_TOKEN
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+if not BOT_TOKEN:
+    raise RuntimeError("BOT_TOKEN is missing in environment variables")
 
 MASTER_IDS = (
     884595697,
