@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import signal
 from dotenv import load_dotenv
 import aiohttp
 from aiogram import Bot, Dispatcher
@@ -16,6 +17,7 @@ from reminders import check_reminders
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 scheduler = AsyncIOScheduler(timezone="UTC")
+signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 async def _delayed_startup(bot: Bot, scheduler: AsyncIOScheduler):
     try:
@@ -36,10 +38,17 @@ async def _delayed_startup(bot: Bot, scheduler: AsyncIOScheduler):
         logger.exception("repair_db failed: %s", exc)
 
     scheduler.add_job(check_reminders, "interval", minutes=10, args=[bot])
-    scheduler.start()
+    if not scheduler.running:
+        scheduler.start()
+
+async def safe_start(bot: Bot, scheduler: AsyncIOScheduler):
+    try:
+        await _delayed_startup(bot, scheduler)
+    except Exception as exc:
+        logger.exception("startup crash prevented: %s", exc)
 
 async def startup_handler(dispatcher: Dispatcher, bot: Bot):
-    asyncio.create_task(_delayed_startup(bot, scheduler))
+    asyncio.create_task(safe_start(bot, scheduler))
 
 async def main():
     if not BOT_TOKEN:
