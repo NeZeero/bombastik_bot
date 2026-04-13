@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from dotenv import load_dotenv
+import aiohttp
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -44,7 +45,12 @@ async def main():
     if not BOT_TOKEN:
         raise RuntimeError("BOT_TOKEN is not set. Define it in .env or environment variables.")
 
-    bot = Bot(token=BOT_TOKEN, request_timeout=120)
+    connector = aiohttp.TCPConnector(force_close=True)
+    bot = Bot(
+        token=BOT_TOKEN,
+        request_timeout=120,
+        connector=connector,
+    )
     dp = Dispatcher(storage=MemoryStorage())
 
     dp.include_router(master.router)
