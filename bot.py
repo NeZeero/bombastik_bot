@@ -14,7 +14,7 @@ from reminders import check_reminders
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-scheduler = AsyncIOScheduler()
+scheduler = AsyncIOScheduler(timezone="UTC")
 
 async def _delayed_startup(bot: Bot, scheduler: AsyncIOScheduler):
     try:
@@ -55,7 +55,6 @@ async def main():
     try:
         await dp.start_polling(bot)
     finally:
-        scheduler.shutdown(wait=False)
         await bot.session.close()
 
 if __name__ == "__main__":
