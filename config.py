@@ -1,10 +1,16 @@
 from __future__ import annotations
 
+import os
+from dotenv import load_dotenv
+
 # ==========================================
 # НАСТРОЙКИ БОТА
 # ==========================================
 
-BOT_TOKEN = "8173781333:AAFHyvuHTjvXsqOgEfuUDsD9ydTQwnvUSpY"
+load_dotenv()
+
+BOT_TOKEN = os.getenv("BOT_TOKEN") or os.getenv("TOKEN") or ""
+TOKEN = BOT_TOKEN
 
 MASTER_IDS = (
     884595697,
