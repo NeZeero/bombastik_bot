@@ -35,8 +35,8 @@ async def _delayed_startup(bot: Bot, scheduler: AsyncIOScheduler):
     except Exception as exc:
         logger.exception("repair_db failed: %s", exc)
 
-    scheduler.add_job(check_reminders, "interval", minutes=10, args=[bot])
     if not scheduler.running:
+        scheduler.add_job(check_reminders, "interval", minutes=10, args=[bot])
         scheduler.start()
 
 async def safe_start(bot: Bot, scheduler: AsyncIOScheduler):
