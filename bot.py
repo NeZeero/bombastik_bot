@@ -15,6 +15,7 @@ from reminders import check_reminders
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 scheduler = AsyncIOScheduler(timezone="UTC")
+scheduler_started = False
 signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 async def _delayed_startup(bot: Bot, scheduler: AsyncIOScheduler):
@@ -35,10 +36,6 @@ async def _delayed_startup(bot: Bot, scheduler: AsyncIOScheduler):
     except Exception as exc:
         logger.exception("repair_db failed: %s", exc)
 
-    if not scheduler.running:
-        scheduler.add_job(check_reminders, "interval", minutes=10, args=[bot])
-        scheduler.start()
-
 async def safe_start(bot: Bot, scheduler: AsyncIOScheduler):
     try:
         await _delayed_startup(bot, scheduler)
@@ -46,6 +43,13 @@ async def safe_start(bot: Bot, scheduler: AsyncIOScheduler):
         logger.exception("startup crash prevented: %s", exc)
 
 async def startup_handler(dispatcher: Dispatcher, bot: Bot):
+    global scheduler_started
+
+    if not scheduler_started:
+        scheduler.add_job(check_reminders, "interval", minutes=10, args=[bot])
+        scheduler.start()
+        scheduler_started = True
+
     asyncio.create_task(safe_start(bot, scheduler))
 
 async def main():
