@@ -1,13 +1,11 @@
 import asyncio
 import logging
 import signal
-from dotenv import load_dotenv
+
 import aiohttp
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-
-load_dotenv()
 
 from config import BOT_TOKEN
 from handlers import client_v2, master
@@ -51,9 +49,6 @@ async def startup_handler(dispatcher: Dispatcher, bot: Bot):
     asyncio.create_task(safe_start(bot, scheduler))
 
 async def main():
-    if not BOT_TOKEN:
-        raise RuntimeError("BOT_TOKEN is not set. Define it in .env or environment variables.")
-
     connector = aiohttp.TCPConnector(force_close=True)
     bot = Bot(
         token=BOT_TOKEN,

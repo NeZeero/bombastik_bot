@@ -1,6 +1,14 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+BASE_DIR = Path(__file__).resolve().parent
+ENV_FILE = BASE_DIR / ".env"
+
+load_dotenv(dotenv_path=ENV_FILE)
 
 # ==========================================
 # НАСТРОЙКИ БОТА
@@ -8,7 +16,9 @@ import os
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 if not BOT_TOKEN:
-    raise RuntimeError("BOT_TOKEN is missing in environment variables")
+    raise RuntimeError(
+        f"BOT_TOKEN is not set. Create {ENV_FILE} and add BOT_TOKEN=your_telegram_bot_token"
+    )
 
 MASTER_IDS = (
     884595697,
