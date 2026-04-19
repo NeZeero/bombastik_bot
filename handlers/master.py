@@ -22,6 +22,7 @@ from database import (
     get_work_ranges_for_date,
     parse_work_ranges,
 )
+from time_utils import today_local
 
 router = Router()
 logger = logging.getLogger(__name__)
@@ -46,7 +47,7 @@ def _master_panel_markup() -> InlineKeyboardMarkup:
 
 
 def _future_dates(days: int = MASTER_CALENDAR_DAYS) -> list[str]:
-    today = datetime.now().date()
+    today = today_local()
     return [(today + timedelta(days=offset)).strftime("%Y-%m-%d") for offset in range(days)]
 
 

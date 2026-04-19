@@ -7,14 +7,14 @@ from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-from config import BOT_TOKEN
+from config import BOT_TIMEZONE, BOT_TOKEN
 from handlers import client_v2, master
 from database import init_db, repair_db
 from reminders import check_reminders
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-scheduler = AsyncIOScheduler(timezone="UTC")
+scheduler = AsyncIOScheduler(timezone=BOT_TIMEZONE)
 scheduler_started = False
 signal.signal(signal.SIGINT, signal.SIG_IGN)
 

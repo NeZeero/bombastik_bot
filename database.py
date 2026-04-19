@@ -4,7 +4,8 @@ import sqlite3
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from config import SLOT_STEP_MINUTES
+from config import REMINDER_LEAD_HOURS, REMINDER_WINDOW_MINUTES, SLOT_STEP_MINUTES
+from time_utils import now_local, parse_local_datetime
 
 DB_PATH = Path(__file__).resolve().parent / "beauty_bot.db"
 TIME_FORMAT = "%H:%M"
@@ -20,7 +21,7 @@ def normalize_slot_time(time_value: str) -> str:
 
 
 def parse_slot_datetime(date: str, time_value: str) -> datetime:
-    return datetime.strptime(f"{date} {normalize_slot_time(time_value)}", DATETIME_FORMAT)
+    return parse_local_datetime(date, normalize_slot_time(time_value), DATETIME_FORMAT)
 
 
 def _format_time(dt: datetime) -> str:
@@ -207,7 +208,7 @@ def _get_day_work_slots(date: str) -> list[str]:
 
 
 def get_work_dates() -> list[str]:
-    today = datetime.now().strftime("%Y-%m-%d")
+    today = now_local().strftime("%Y-%m-%d")
     with get_conn() as conn:
         rows = conn.execute(
             "SELECT DISTINCT slot_date FROM work_slots WHERE slot_date >= ? ORDER BY slot_date",
@@ -260,7 +261,7 @@ def is_slot_free(date: str, time: str, duration_minutes: int = SLOT_STEP_MINUTES
 
 
 def get_available_dates(duration_minutes: int = SLOT_STEP_MINUTES) -> list[str]:
-    today = datetime.now().strftime("%Y-%m-%d")
+    today = now_local().strftime("%Y-%m-%d")
     dates = get_work_dates()
     result: list[str] = []
     for date in dates:
@@ -285,7 +286,7 @@ def _build_slots_for_date(
     bookings = _get_bookings_for_overlap(date)
     result: list[tuple[str, bool]] = []
     work_slots_set = set(work_slots)
-    now = datetime.now()
+    now = now_local()
 
     for slot_time in work_slots:
         slot_dt = parse_slot_datetime(date, slot_time)
@@ -422,7 +423,7 @@ def get_last_client_name(client_id: int) -> str | None:
 
 
 def get_booked_dates() -> list[str]:
-    now = datetime.now()
+    now = now_local()
     with get_conn() as conn:
         rows = conn.execute(
             "SELECT DISTINCT slot_date FROM bookings ORDER BY slot_date"
@@ -474,17 +475,19 @@ def delete_slot(date: str, time: str):
 
 
 def get_upcoming_unreminded():
-    now = datetime.now()
+    now = now_local()
     with get_conn() as conn:
         rows = conn.execute(
             "SELECT id, slot_date, slot_time, client_name, client_phone, client_id FROM bookings WHERE reminded=0 ORDER BY slot_date, slot_time"
         ).fetchall()
     result = []
+    lead_seconds = REMINDER_LEAD_HOURS * 3600
+    window_seconds = REMINDER_WINDOW_MINUTES * 60
     for row in rows:
         try:
             dt = parse_slot_datetime(row[1], row[2])
-            diff = (dt - now).total_seconds() / 3600
-            if 3.5 <= diff <= 4.5:
+            diff_seconds = (dt - now).total_seconds()
+            if lead_seconds - window_seconds <= diff_seconds <= lead_seconds:
                 result.append(row)
         except ValueError:
             continue
@@ -497,7 +500,7 @@ def mark_reminded(booking_id: int):
 
 
 def get_all_bookings():
-    now = datetime.now()
+    now = now_local()
     with get_conn() as conn:
         rows = conn.execute(
             """
